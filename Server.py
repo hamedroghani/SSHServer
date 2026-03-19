@@ -406,15 +406,35 @@ def main():
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind((HOST, PORT))
     sock.listen(100)
+    # Timeout corto para que Ctrl+C interrumpa de forma consistente.
+    sock.settimeout(1.0)
 
     print(f"[+] SSH escuchando en {HOST}:{PORT}")
     print(f"[+] Usuario: {USERNAME}")
     print("[+] Ctrl+C para detener")
 
-    while True:
-        client, addr = sock.accept()
-        t = threading.Thread(target=handle_connection, args=(client, addr), daemon=True)
-        t.start()
+    try:
+        while True:
+            try:
+                client, addr = sock.accept()
+            except socket.timeout:
+                continue
+            except OSError as e:
+                # Socket cerrado o inválido durante apagado.
+                if e.errno in (errno.EBADF, 10038):
+                    break
+                raise
+
+            t = threading.Thread(target=handle_connection, args=(client, addr), daemon=True)
+            t.start()
+    except KeyboardInterrupt:
+        print("\n[!] Ctrl+C detectado, cerrando servidor...")
+    finally:
+        try:
+            sock.close()
+        except Exception:
+            pass
+        print("[*] exit")
 
 
 if __name__ == "__main__":
