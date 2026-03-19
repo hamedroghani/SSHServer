@@ -1,0 +1,8 @@
+{
+  "host": "0.0.0.0",
+  "port": 2222,
+  "username": "TU_USUARIO",
+  "password": "TU_PASSWORD_FUERTE",
+  "host_key_file": "host_rsa.key",
+  "sftp_root": "C:/"
+}
